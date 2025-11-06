@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Evaluación Docente - CBTis 282</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&family=Rosellinda+Alyamore&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --vino: #691C32;
+            --dorado: #BC955C;
+            --gris: #6F7271;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: white;
+            padding: 15px 40px;
+            border-bottom: 6px solid var(--vino);
+        }
+
+        header img {
+            height: 80px;
+        }
+
+        header h1 {
+            font-size: 1.5rem;
+            text-align: center;
+            color: var(--vino);
+            flex: 1;
+        }
+
+        main {
+            max-width: 800px;
+            background: white;
+            margin: 50px auto;
+            padding: 30px 40px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            color: var(--vino);
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        p.instrucciones {
+            background: #fff5ec;
+            border-left: 5px solid var(--dorado);
+            padding: 15px;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+
+        label {
+            font-weight: 600;
+            color: var(--gris);
+            display: block;
+            margin-top: 15px;
+        }
+
+        select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            margin-top: 5px;
+            font-size: 1rem;
+        }
+
+        button {
+            margin-top: 25px;
+            width: 100%;
+            background-color: var(--vino);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #4e1426;
+        }
+
+        footer {
+            text-align: center;
+            padding: 25px;
+            background: #fff;
+            border-top: 4px solid var(--vino);
+            margin-top: 50px;
+        }
+
+        footer p {
+            margin: 0;
+            color: var(--gris);
+            font-size: 0.9rem;
+        }
+
+        .lema {
+            font-family: 'Rosellinda Alyamore', cursive;
+            color: var(--dorado);
+            font-size: 1.6rem;
+            margin-top: 10px;
+        }
+
+        .docente {
+            text-align: center;
+            background: #f3f3f3;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: 600;
+            color: var(--vino);
+            margin-bottom: 20px;
+        }
+
+        .pregunta {
+            margin-bottom: 20px;
+        }
+
+        textarea {
+            resize: vertical;
+            height: 100px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <img src="{{ url_for('static', filename='img/LOGO_DGETI.png') }}" alt="Logo DGETI">
+        <h1>Centro de Bachillerato Tecnológico Industrial y de Servicios No. 282</h1>
+        <img src="{{ url_for('static', filename='img/CBTIS_282.png') }}" alt="Logo CBTIS 282">
+    </header>
+
+    <main>
+        <h2>Evaluación del Desempeño Docente</h2>
+
+        <p class="instrucciones">
+            Estimado(a) estudiante:<br><br>
+            A continuación encontrarás la lista de tus docentes para evaluar. 
+            Te pedimos que selecciones una calificación considerando el desempeño global del docente durante el semestre.<br><br>
+            <strong>Escala de evaluación:</strong><br>
+            5 - Excelente<br>
+            4 - Bueno<br>
+            3 - Regular<br>
+            2 - Deficiente<br>
+            1 - Muy deficiente<br><br>
+            También puedes agregar un comentario breve y respetuoso que ayude a la mejora continua.
+        </p>
+
+        <div id="evaluaciones_container"></div>
+
+        <button id="btn_enviar">Enviar evaluaciones</button>
+    </main>
+
+    <footer>
+        <p>Dirección General de Educación Tecnológica Industrial y de Servicios</p>
+        <p class="lema">Somos Águilas</p>
+    </footer>
+
+    <script>
+        const nombre = localStorage.getItem("nombre_estudiante");
+        const matricula = localStorage.getItem("matricula");
+        const grupo_id = localStorage.getItem("grupo_id");
+
+        if (!nombre || !matricula || !grupo_id) {
+            alert("Por favor, inicia sesión nuevamente.");
+            window.location.href = "/";
+        }
+
+        fetch(`/docentes/${grupo_id}`)
+            .then(res => res.json())
+            .then(docentes => {
+                const cont = document.getElementById("evaluaciones_container");
+                if (docentes.error) {
+                    cont.innerHTML = `<p style="color:red;">${docentes.error}</p>`;
+                    return;
+                }
+
+                docentes.forEach(doc => {
+                    const div = document.createElement("div");
+                    div.classList.add("pregunta");
+                    div.innerHTML = `
+                        <div class="docente">${doc.nombre}</div>
+                        <label>Calificación:</label>
+                        <select id="calificacion_${doc.id}">
+                            <option value="">Selecciona una opción</option>
+                            <option value="5">5 - Excelente</option>
+                            <option value="4">4 - Bueno</option>
+                            <option value="3">3 - Regular</option>
+                            <option value="2">2 - Deficiente</option>
+                            <option value="1">1 - Muy deficiente</option>
+                        </select>
+                        <label>Comentario:</label>
+                        <textarea id="comentario_${doc.id}" placeholder="Escribe un comentario opcional..."></textarea>
+                    `;
+                    cont.appendChild(div);
+                });
+            })
+            .catch(() => alert("Error al obtener los docentes."));
+
+        document.getElementById("btn_enviar").addEventListener("click", () => {
+            const grupo_id = localStorage.getItem("grupo_id");
+            const matricula = localStorage.getItem("matricula");
+
+            fetch(`/docentes/${grupo_id}`)
+                .then(res => res.json())
+                .then(docentes => {
+                    const evaluaciones = docentes.map(doc => {
+                        return {
+                            docente_id: doc.id,
+                            calificacion: document.getElementById(`calificacion_${doc.id}`).value,
+                            comentario: document.getElementById(`comentario_${doc.id}`).value.trim()
+                        };
+                    }).filter(e => e.calificacion !== "");
+
+                    if (evaluaciones.length === 0) {
+                        alert("Por favor, califica al menos un docente antes de enviar.");
+                        return;
+                    }
+
+                    fetch("/guardar_evaluaciones", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            matricula: matricula,
+                            grupo_id: grupo_id,
+                            evaluaciones: evaluaciones
+                        })
+                    })
+                    .then(res => res.json())
+                    .then(resp => {
+                        if (resp.success) {
+                            alert("¡Evaluaciones registradas con éxito!");
+                            localStorage.clear();
+                            window.location.href = "/";
+                        } else {
+                            alert(resp.error || "Ocurrió un error al guardar las evaluaciones.");
+                        }
+                    })
+                    .catch(() => alert("Error al conectar con el servidor."));
+                });
+        });
+    </script>
+</body>
+</html>

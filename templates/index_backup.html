@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Evaluación de Docentes</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        h1, h2 { color: #2c3e50; }
+        select, input, textarea, button { margin: 5px 0; width: 100%; max-width: 500px; }
+        button { padding: 8px; background-color: #2c3e50; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background-color: #34495e; }
+        .oculto { display: none; }
+        .criterio_div { margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+    <h1>Evaluación de Docentes</h1>
+
+    <!-- PANTALLA DE IDENTIFICACIÓN -->
+    <div id="identificacion_div">
+        <h2>Identifícate</h2>
+        <label>Nombre del estudiante:</label>
+        <input type="text" id="estudiante_nombre" required><br>
+
+        <label>Matrícula:</label>
+        <input type="text" id="matricula" required><br>
+
+        <button onclick="iniciarEvaluacion()">Continuar</button>
+        <p id="error_identificacion" style="color:red;"></p>
+    </div>
+
+    <!-- FORMULARIO PRINCIPAL -->
+    <div id="evaluacion_div" class="oculto">
+        <h2>Formulario de Evaluación</h2>
+        <p><strong>Grupo:</strong> <span id="grupo_nombre"></span></p>
+
+        <label>Docente:</label>
+        <select id="docente_select" onchange="reiniciarFormulario()"></select><br>
+
+        <h3>Responde todos los criterios:</h3>
+        <div id="criterios_container"></div>
+
+        <label>Comentario adicional (opcional):</label><br>
+        <textarea id="comentario" rows="4" cols="50"></textarea><br><br>
+
+        <button onclick="enviarEvaluacion()">Enviar Evaluación</button>
+    </div>
+
+    <script>
+        const criterios = [
+            "1. La preparación de sus clases fue",
+            "2. Las actividades de aprendizaje en relación con el programa de la materia fueron",
+            "3. El detalle con que impartió su clase fue",
+            "4. El uso de tecnologías de información fue",
+            "5. Las actividades para poner en práctica los conocimientos fueron",
+            "6. La claridad en su comunicación fue",
+            "7. Las instrucciones para las tareas fueron",
+            "8. La congruencia de los exámenes con los temas tratados fue",
+            "9. La información oportuna sobre mis avances fue",
+            "10. En general, el desempeño del profesor fue"
+        ];
+
+        const opciones = ["Elige tu respuesta", "Muy bueno", "Bueno", "Regular", "Malo", "Muy malo"];
+        let grupo_id = null;
+
+        function iniciarEvaluacion() {
+            const nombre = document.getElementById("estudiante_nombre").value.trim();
+            const matricula = document.getElementById("matricula").value.trim();
+            const errorMsg = document.getElementById("error_identificacion");
+
+            if (!nombre || !matricula) {
+                errorMsg.textContent = "Por favor, completa todos los campos.";
+                return;
+            }
+
+            fetch(`/grupo_estudiante/${matricula}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.error) {
+                        errorMsg.textContent = "No se encontró al estudiante en la base de datos.";
+                    } else {
+                        grupo_id = data.id;
+                        document.getElementById("grupo_nombre").textContent = data.nombre;
+                        document.getElementById("identificacion_div").classList.add("oculto");
+                        document.getElementById("evaluacion_div").classList.remove("oculto");
+                        cargarDocentes();
+                        generarCriterios();
+                    }
+                })
+                .catch(() => errorMsg.textContent = "Error al conectar con el servidor.");
+        }
+
+        function cargarDocentes() {
+            fetch(`/docentes/${grupo_id}`)
+                .then(r => r.json())
+                .then(data => {
+                    const docenteSelect = document.getElementById('docente_select');
+                    docenteSelect.innerHTML = "<option value=''>Elige un docente</option>";
+                    data.forEach(d => {
+                        let option = document.createElement("option");
+                        option.value = d.id;
+                        option.text = d.nombre;
+                        docenteSelect.appendChild(option);
+                    });
+                });
+        }
+
+        function generarCriterios() {
+            const container = document.getElementById("criterios_container");
+            container.innerHTML = "";
+            criterios.forEach(c => {
+                let div = document.createElement("div");
+                div.classList.add("criterio_div");
+                div.innerHTML = `<label>${c}</label>
+                <select class="criterio_select">
+                    ${opciones.map(o => `<option value="${o}">${o}</option>`).join("")}
+                </select>`;
+                container.appendChild(div);
+            });
+        }
+
+        function reiniciarFormulario() {
+            document.querySelectorAll('.criterio_select').forEach(sel => sel.value = "Elige tu respuesta");
+            document.getElementById('comentario').value = "";
+        }
+
+        function enviarEvaluacion() {
+            const docente_id = document.getElementById('docente_select').value;
+            const estudiante_nombre = document.getElementById('estudiante_nombre').value.trim();
+            const matricula = document.getElementById('matricula').value.trim();
+            const comentario = document.getElementById('comentario').value;
+
+            if (!docente_id) {
+                alert("Por favor elige un docente.");
+                return;
+            }
+
+            const criteriosSeleccionados = {};
+            let incompletas = false;
+            document.querySelectorAll('.criterio_select').forEach((sel, i) => {
+                if (sel.value === "Elige tu respuesta") incompletas = true;
+                criteriosSeleccionados[criterios[i]] = sel.value;
+            });
+
+            if (incompletas) {
+                alert("Debes responder todos los criterios antes de enviar.");
+                return;
+            }
+
+            fetch('/evaluar', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    estudiante_nombre,
+                    matricula,
+                    grupo_id,
+                    docente_id,
+                    criterios: criteriosSeleccionados,
+                    comentario
+                })
+            })
+            .then(r => r.json())
+            .then(data => alert(data.mensaje || data.error))
+            .catch(() => alert("Error al enviar la evaluación."));
+        }
+    </script>
+</body>
+</html>
+

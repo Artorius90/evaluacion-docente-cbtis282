@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Evaluación Docente - CBTis 282</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&family=Rosellinda+Alyamore&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --vino: #691C32;
+            --dorado: #BC955C;
+            --gris: #6F7271;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: white;
+            padding: 15px 40px;
+            border-bottom: 6px solid var(--vino);
+        }
+
+        header img {
+            height: 80px;
+        }
+
+        header h1 {
+            font-size: 1.5rem;
+            text-align: center;
+            color: var(--vino);
+            flex: 1;
+        }
+
+        main {
+            max-width: 700px;
+            background: white;
+            margin: 50px auto;
+            padding: 30px 40px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            color: var(--vino);
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        p.instrucciones {
+            background: #fff5ec;
+            border-left: 5px solid var(--dorado);
+            padding: 15px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+            font-weight: 600;
+            color: var(--gris);
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            margin-top: 5px;
+            font-size: 1rem;
+        }
+
+        button {
+            margin-top: 25px;
+            width: 100%;
+            background-color: var(--vino);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #4e1426;
+        }
+
+        footer {
+            text-align: center;
+            padding: 25px;
+            background: #fff;
+            border-top: 4px solid var(--vino);
+            margin-top: 50px;
+        }
+
+        footer p {
+            margin: 0;
+            color: var(--gris);
+            font-size: 0.9rem;
+        }
+
+        .lema {
+            font-family: 'Palace Script MT', cursive;
+            color: var(--dorado);
+            font-size: 1.6rem;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <img src="{{ url_for('static', filename='img/LOGO_DGETI.png') }}" alt="Logo DGETI">
+        <h1>Centro de Bachillerato Tecnológico Industrial y de Servicios No. 282</h1>
+        <img src="{{ url_for('static', filename='img/CBTIS_282.png') }}" alt="Logo CBTIS 282">
+    </header>
+
+    <main>
+        <h2>Evaluación del Desempeño Docente</h2>
+
+        <p class="instrucciones">
+            Estimado estudiante:<br><br>
+            Te pedimos responder con honestidad la siguiente evaluación del desempeño docente. 
+            La información que proporciones será utilizada con fines académicos y de mejora continua. 
+            Tus respuestas son confidenciales.<br><br>
+            Ingresa tu nombre completo y número de control para continuar con la evaluación de tus docentes.
+        </p>
+
+        <form id="form_inicio">
+            <label for="estudiante_nombre">Nombre del estudiante:</label>
+            <input type="text" id="estudiante_nombre" name="estudiante_nombre" required placeholder="Ejemplo: Juan Pérez Martínez">
+
+            <label for="matricula">Número de control:</label>
+            <input type="text" id="matricula" name="matricula" required placeholder="Ejemplo: 24301052820115">
+
+            <button type="submit">Continuar</button>
+        </form>
+    </main>
+
+    <footer>
+        <p>Dirección General de Educación Tecnológica Industrial y de Servicios</p>
+        <p class="lema">Somos Águilas</p>
+    </footer>
+
+    <script>
+        document.getElementById("form_inicio").addEventListener("submit", function(e) {
+            e.preventDefault();
+            const nombre = document.getElementById("estudiante_nombre").value.trim();
+            const matricula = document.getElementById("matricula").value.trim();
+
+            if (!nombre || !matricula) {
+                alert("Por favor, completa todos los campos.");
+                return;
+            }
+
+            fetch(`/grupo_estudiante/${matricula}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.error) {
+                        alert(data.error);
+                    } else {
+                        localStorage.setItem("nombre_estudiante", nombre);
+                        localStorage.setItem("matricula", matricula);
+                        localStorage.setItem("grupo_id", data.id);
+                        localStorage.setItem("grupo_nombre", data.nombre);
+                        window.location.href = "/evaluacion";
+                    }
+                })
+                .catch(() => alert("Error al conectar con el servidor."));
+        });
+    </script>
+</body>
+</html>
+

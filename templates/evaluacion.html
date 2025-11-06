@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Evaluación Docente - CBTis 282</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&family=Rosellinda+Alyamore&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --vino: #691C32;
+            --dorado: #BC955C;
+            --gris: #6F7271;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: white;
+            padding: 15px 40px;
+            border-bottom: 6px solid var(--vino);
+        }
+
+        header img {
+            height: 80px;
+        }
+
+        header h1 {
+            font-size: 1.4rem;
+            text-align: center;
+            color: var(--vino);
+            flex: 1;
+        }
+
+        main {
+            max-width: 900px;
+            background: white;
+            margin: 30px auto;
+            padding: 30px 40px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            color: var(--vino);
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .docente-section {
+            border: 2px solid var(--dorado);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            background: #fffaf5;
+        }
+
+        .docente-section h3 {
+            color: var(--vino);
+            border-bottom: 2px solid var(--dorado);
+            padding-bottom: 8px;
+        }
+
+        label {
+            display: block;
+            margin-top: 10px;
+            font-weight: 600;
+            color: var(--gris);
+        }
+
+        select, textarea {
+            width: 100%;
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            margin-top: 5px;
+            font-size: 0.95rem;
+        }
+
+        textarea {
+            resize: vertical;
+        }
+
+        button {
+            margin-top: 25px;
+            width: 100%;
+            background-color: var(--vino);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #4e1426;
+        }
+
+        footer {
+            text-align: center;
+            padding: 25px;
+            background: #fff;
+            border-top: 4px solid var(--vino);
+            margin-top: 40px;
+        }
+
+        footer p {
+            margin: 0;
+            color: var(--gris);
+            font-size: 0.9rem;
+        }
+
+        .lema {
+            font-family: 'Rosellinda Alyamore', cursive;
+            color: var(--dorado);
+            font-size: 1.6rem;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <img src="{{ url_for('static', filename='img/LOGO_DGETI.png') }}" alt="Logo DGETI">
+    <h1>Centro de Bachillerato Tecnológico Industrial y de Servicios No. 282</h1>
+    <img src="{{ url_for('static', filename='img/CBTIS_282.png') }}" alt="Logo CBTIS 282">
+</header>
+
+<main>
+    <h2>Evaluación del Desempeño Docente</h2>
+    <p style="background:#fff5ec; padding:10px; border-left:5px solid var(--dorado); border-radius:8px;">
+        Estudiante: <strong id="nombre_estudiante"></strong><br>
+        Número de control: <strong id="matricula_estudiante"></strong><br>
+        Grupo: <strong id="grupo_nombre"></strong>
+    </p>
+
+    <div id="evaluaciones_container"></div>
+
+    <button id="btn_enviar">Enviar todas las evaluaciones</button>
+</main>
+
+<footer>
+    <p>Dirección General de Educación Tecnológica Industrial y de Servicios</p>
+    <p class="lema">Somos Águilas</p>
+</footer>
+
+<script>
+    const criterios = [
+        "1. La preparación de sus clases fue",
+        "2. Las actividades de aprendizaje en relación con el programa de la materia fueron",
+        "3. El detalle con que impartió su clase fue",
+        "4. El uso de tecnologías de información fue",
+        "5. Las actividades para poner en práctica los conocimientos fueron",
+        "6. La claridad en su comunicación fue",
+        "7. Las instrucciones para las tareas fueron",
+        "8. La congruencia de los exámenes con los temas tratados fue",
+        "9. La información oportuna sobre mis avances fue",
+        "10. En general, el desempeño del profesor fue"
+    ];
+
+    const opciones = ["Elige tu respuesta", "Muy bueno", "Bueno", "Regular", "Malo", "Muy malo"];
+
+    const nombre = localStorage.getItem("nombre_estudiante");
+    const matricula = localStorage.getItem("matricula");
+    const grupo_id = localStorage.getItem("grupo_id");
+    const grupo_nombre = localStorage.getItem("grupo_nombre");
+
+    document.getElementById("nombre_estudiante").textContent = nombre;
+    document.getElementById("matricula_estudiante").textContent = matricula;
+    document.getElementById("grupo_nombre").textContent = grupo_nombre;
+
+    function generarFormularioDocente(docente) {
+        let html = `
+        <div class="docente-section" data-docente-id="${docente.id}">
+            <h3>${docente.nombre}</h3>
+        `;
+        criterios.forEach((c, i) => {
+            html += `
+            <label>${c}</label>
+            <select class="criterio" data-criterio="${c}">
+                ${opciones.map(o => `<option value="${o}">${o}</option>`).join("")}
+            </select>
+            `;
+        });
+        html += `
+        <label>Comentario adicional (opcional):</label>
+        <textarea class="comentario" rows="3" placeholder="Escribe aquí tus comentarios sobre ${docente.nombre}"></textarea>
+        </div>`;
+        return html;
+    }
+
+    fetch(`/docentes/${grupo_id}`)
+        .then(r => r.json())
+        .then(data => {
+            const container = document.getElementById("evaluaciones_container");
+            data.forEach(d => container.innerHTML += generarFormularioDocente(d));
+        });
+
+    document.getElementById("btn_enviar").addEventListener("click", () => {
+        const secciones = document.querySelectorAll(".docente-section");
+        const evaluaciones = [];
+
+        secciones.forEach(sec => {
+            const docente_id = sec.getAttribute("data-docente-id");
+            const criteriosSeleccionados = {};
+            sec.querySelectorAll(".criterio").forEach(sel => {
+                criteriosSeleccionados[sel.getAttribute("data-criterio")] = sel.value;
+            });
+            const comentario = sec.querySelector(".comentario").value;
+
+            evaluaciones.push({
+                docente_id,
+                criterios: criteriosSeleccionados,
+                comentario
+            });
+        });
+
+        Promise.all(
+            evaluaciones.map(ev => {
+                return fetch("/evaluar", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({
+                        estudiante_nombre: nombre,
+                        matricula: matricula,
+                        grupo_id: grupo_id,
+                        docente_id: ev.docente_id,
+                        criterios: ev.criterios,
+                        comentario: ev.comentario
+                    })
+                });
+            })
+        ).then(() => {
+            mostrarMensajeFinal();
+        }).catch(() => alert("❌ Error al enviar las evaluaciones."));
+    });
+
+    function mostrarMensajeFinal() {
+        document.body.innerHTML = `
+            <div style="
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                height: 100vh;
+                background: #f8f9fa;
+                font-family: 'Montserrat', sans-serif;
+                color: #333;
+                text-align: center;
+                padding: 30px;
+            ">
+                <img src="/static/img/LOGO_DGETI.png" alt="Logo DGETI" style="height: 90px; margin-bottom: 15px;">
+                <h1 style="color: #691C32;">¡Evaluaciones enviadas con éxito!</h1>
+                <p style="max-width: 600px; font-size: 1.1rem; margin-top: 15px;">
+                    Agradecemos tu participación en el proceso de evaluación docente del 
+                    <strong>Centro de Bachillerato Tecnológico Industrial y de Servicios No. 282</strong>.
+                    <br><br>
+                    Tus respuestas serán analizadas de forma confidencial para fortalecer la calidad educativa
+                    y contribuir a la mejora continua de nuestros procesos de enseñanza.
+                </p>
+                <p style="color: #BC955C; font-family: 'Palace Script MT', cursive; font-size: 2rem; margin-top: 20px;">
+                    Somos Águilas
+                </p>
+                <img src="/static/img/CBTIS_282.png" alt="Logo CBTis 282" style="height: 90px; margin-top: 20px;">
+                <button onclick="window.location.href='/'" style="
+                    margin-top: 30px;
+                    background-color: #691C32;
+                    color: white;
+                    border: none;
+                    padding: 12px 25px;
+                    border-radius: 8px;
+                    font-size: 1rem;
+                    cursor: pointer;
+                    transition: background 0.3s ease;
+                ">Volver al inicio</button>
+            </div>
+        `;
+    }
+</script>
+
+</body>
+</html>
+
+
+

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel de Administración</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f8f9fa; margin: 40px; }
+        h1, h2 { color: #333; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+        th { background-color: #343a40; color: white; }
+        tr:nth-child(even) { background: #eee; }
+        .comentario { background: #fff; padding: 10px; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 0 5px rgba(0,0,0,0.1); }
+        .container { max-width: 1000px; margin: auto; }
+        .back { display: inline-block; margin-bottom: 15px; text-decoration: none; color: #007bff; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Panel de Administración</h1>
+
+    <h2>Promedios por Docente y Grupo</h2>
+    <table>
+        <tr>
+            <th>Grupo</th>
+            <th>Docente</th>
+            <th>Promedio</th>
+        </tr>
+        {% for fila in resultados %}
+        <tr>
+            <td>{{ fila['grupo'] }}</td>
+            <td>{{ fila['docente'] }}</td>
+            <td>{{ fila['promedio'] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Comentarios de los Estudiantes</h2>
+    {% for c in comentarios %}
+        <div class="comentario">
+            <strong>{{ c['docente'] }} ({{ c['grupo'] }})</strong><br>
+            <em>{{ c['comentario'] }}</em>
+        </div>
+    {% else %}
+        <p>No hay comentarios registrados.</p>
+    {% endfor %}
+</div>
+</body>
+</html>
+

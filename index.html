@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Evaluación Docente</title>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; background:#f5f7fb; margin:20px; }
+    .card { max-width:900px; margin:12px auto; background:white; padding:20px; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.06); }
+    h2 { margin-top:0; text-align:center; }
+    label { display:block; margin-top:12px; font-weight:600; }
+    select, textarea, input { width:100%; padding:8px; margin-top:6px; border-radius:6px; border:1px solid #ddd; }
+    .row { display:flex; gap:12px; }
+    .col { flex:1; }
+    button { margin-top:16px; padding:10px 16px; background:#0078d7; color:white; border:none; border-radius:6px; cursor:pointer; }
+    small { color:#666; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Evaluación Docente</h2>
+
+    <label for="grupo">Selecciona tu grupo</label>
+    <select id="grupo"></select>
+
+    <div class="row">
+      <div class="col">
+        <label for="estudiante">Selecciona tu nombre (estudiante)</label>
+        <select id="estudiante"></select>
+      </div>
+      <div class="col">
+        <label for="docente">Selecciona el docente</label>
+        <select id="docente"></select>
+      </div>
+    </div>
+
+    <div id="criterios"></div>
+
+    <label for="comentarios">Comentarios adicionales (opcional)</label>
+    <textarea id="comentarios" rows="4" placeholder="Comentario..."></textarea>
+
+    <button id="submitBtn">Enviar evaluación</button>
+    <p id="msg" style="color:green;"></p>
+  </div>
+
+  <script>
+    const criteriosList = [
+      "La preparación de sus clases fue",
+      "Las actividades de aprendizaje en relación con el programa de la materia fueron",
+      "El detalle con que impartió su clase fue",
+      "El uso de tecnologías de información como: foros, diccionarios electrónicos, medios de conversación, videoconferencias u otro medio para favorecer el aprendizaje y la comunicación fue",
+      "Las actividades que me proveyó el profesor/a para poner en práctica los conocimientos de los diferentes temas abordados en la asignatura fueron",
+      "La claridad en su comunicación para lograr una comprensión de los temas fue",
+      "Las instrucciones que me dio sobre lo que se iba a hacer en la entrega de mis tareas en línea fue",
+      "La congruencia de los exámenes o proyectos con los temas tratados fue",
+      "La información oportuna sobre los avances en mi aprendizaje fue",
+      "En general el desempeño del profesor fue"
+    ];
+
+    const escala = ["Muy bueno","Bueno","Regular","Malo","Muy malo"];
+
+    // renderizar select por cada criterio
+    const criteriosDiv = document.getElementById('criterios');
+    criteriosList.forEach((texto, idx) => {
+      const id = `c${idx+1}`;
+      let html = `<label for="${id}">${idx+1}. ${texto}</label>`;
+      html += `<select id="${id}">`;
+      escala.forEach(opt => html += `<option value="${opt}">${opt}</option>`);
+      html += `</select>`;
+      criteriosDiv.insertAdjacentHTML('beforeend', html);
+    });
+
+    async function fetchJSON(path) {
+      const resp = await fetch(path);
+      if (!resp.ok) throw new Error('Error al obtener ' + path);
+      return resp.json();
+    }
+
+    async function cargarGrupos() {
+      const grupos = await fetchJSON('/grupos');
+      const sel = document.getElementById('grupo');
+      sel.innerHTML = '';
+      grupos.forEach(g => sel.innerHTML += `<option value="${g.id}">${g.nombre}</option>`);
+      if (grupos.length) {
+        await cargarDependencias(grupos[0].id);
+      }
+    }
+
+    async function cargarDependencias(grupoId) {
+      // estudiantes del grupo
+      const estudiantes = await fetchJSON(`/estudiantes/${grupoId}`);
+      const selEst = document.getElementById('estudiante');
+      selEst.innerHTML = '';
+      estudiantes.forEach(e => selEst.innerHTML += `<option value="${e.id}">${e.nombre} ${e.matricula ? '('+e.matricula+')' : ''}</option>`);
+
+      // docentes del grupo
+      const docentes = await fetchJSON(`/docentes/${grupoId}`);
+      const selDoc = document.getElementById('docente');
+      selDoc.innerHTML = '';
+      docentes.forEach(d => selDoc.innerHTML += `<option value="${d.id}">${d.nombre}</option>`);
+    }
+
+    document.getElementById('grupo').addEventListener('change', (e) => {
+      cargarDependencias(e.target.value);
+    });
+
+    document.getElementById('submitBtn').addEventListener('click', async () => {
+      try {
+        const grupoId = document.getElementById('grupo').value;
+        const estudianteId = document.getElementById('estudiante').value;
+        const docenteId = document.getElementById('docente').value;
+        const comentarios = document.getElementById('comentarios').value;
+
+        const criterios = {};
+        criteriosList.forEach((_, idx) => {
+          criterios[`criterio${idx+1}`] = document.getElementById(`c${idx+1}`).value;
+        });
+
+        const payload = {
+          estudiante_id: estudianteId,
+          grupo_id: grupoId,
+          docente_id: docenteId,
+          criterios,
+          comentarios
+        };
+
+        const resp = await fetch('/evaluar', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify(payload)
+        });
+
+        if (resp.ok) {
+          document.getElementById('msg').textContent = '✅ Evaluación enviada correctamente.';
+          // limpiar comentarios y mantener selects
+          document.getElementById('comentarios').value = '';
+        } else {
+          const err = await resp.json();
+          alert('Error: ' + (err.error || 'No se pudo enviar'));
+        }
+      } catch (err) {
+        alert('Error enviando evaluación: ' + err.message);
+      }
+    });
+
+    // inicializar
+    cargarGrupos();
+
+  </script>
+</body>
+</html>

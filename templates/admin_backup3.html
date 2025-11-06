@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Panel Administrativo - CBTis 282</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&family=Rosellinda+Alyamore&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --vino: #691C32;
+      --dorado: #BC955C;
+      --gris: #6F7271;
+    }
+
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background-color: #f8f9fa;
+      margin: 0;
+      padding: 0;
+      color: #333;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: white;
+      padding: 15px 40px;
+      border-bottom: 6px solid var(--vino);
+    }
+
+    header img {
+      height: 80px;
+    }
+
+    header h1 {
+      flex: 1;
+      text-align: center;
+      font-size: 1.5rem;
+      color: var(--vino);
+    }
+
+    main {
+      max-width: 1100px;
+      margin: 40px auto;
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      color: var(--vino);
+      text-align: center;
+      border-bottom: 2px solid var(--dorado);
+      padding-bottom: 10px;
+    }
+
+    .filtros {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+
+    select, button {
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+    }
+
+    button {
+      background-color: var(--vino);
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #4e1426;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 30px;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: center;
+    }
+
+    th {
+      background-color: var(--vino);
+      color: white;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f2f2f2;
+    }
+
+    .comentario {
+      background: #fffaf5;
+      border-left: 5px solid var(--dorado);
+      margin-bottom: 10px;
+      padding: 10px;
+      border-radius: 8px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 25px;
+      background: #fff;
+      border-top: 4px solid var(--vino);
+      margin-top: 40px;
+    }
+
+    footer p {
+      margin: 0;
+      color: var(--gris);
+      font-size: 0.9rem;
+    }
+
+    .lema {
+      font-family: 'Rosellinda Alyamore', cursive;
+      color: var(--dorado);
+      font-size: 1.6rem;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <img src="{{ url_for('static', filename='img/LOGO_DGETI.png') }}" alt="Logo DGETI">
+    <h1>Centro de Bachillerato Tecnológico Industrial y de Servicios No. 282</h1>
+    <img src="{{ url_for('static', filename='img/CBTIS_282.png') }}" alt="Logo CBTis 282">
+  </header>
+
+  <main>
+    <h2>Panel de Administración</h2>
+
+    <div class="filtros">
+      <select id="filtro_docente">
+        <option value="">Filtrar por docente</option>
+        {% for d in docentes %}
+          <option value="{{ d }}">{{ d }}</option>
+        {% endfor %}
+      </select>
+
+      <select id="filtro_grupo">
+        <option value="">Filtrar por grupo</option>
+        {% for g in grupos %}
+          <option value="{{ g }}">{{ g }}</option>
+        {% endfor %}
+      </select>
+
+      <button onclick="filtrar()">Aplicar filtro</button>
+      <button onclick="limpiar()">Mostrar todo</button>
+    </div>
+
+    <h3>Promedios por Docente y Grupo</h3>
+    <table id="tabla_promedios">
+      <thead>
+        <tr>
+          <th>Grupo</th>
+          <th>Docente</th>
+          <th>Promedio Numérico</th>
+          <th>Promedio Textual</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for fila in resultados %}
+        <tr>
+          <td>{{ fila['grupo'] }}</td>
+          <td>{{ fila['docente'] }}</td>
+          <td>{{ "%.2f"|format(fila['promedio']) }}</td>
+          <td>
+            {% if fila['promedio'] >= 4.5 %} Muy bueno
+            {% elif fila['promedio'] >= 3.5 %} Bueno
+            {% elif fila['promedio'] >= 2.5 %} Regular
+            {% elif fila['promedio'] >= 1.5 %} Malo
+            {% else %} Muy malo
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <h3>Comentarios de los Estudiantes</h3>
+    {% for c in comentarios %}
+      <div class="comentario">
+        <strong>{{ c['docente'] }} ({{ c['grupo'] }})</strong><br>
+        <em>{{ c['comentario'] }}</em>
+      </div>
+    {% else %}
+      <p>No hay comentarios registrados.</p>
+    {% endfor %}
+  </main>
+
+  <footer>
+    <p>Dirección General de Educación Tecnológica Industrial y de Servicios</p>
+    <p class="lema">Somos Águilas</p>
+  </footer>
+
+  <script>
+    function filtrar() {
+      const docente = document.getElementById("filtro_docente").value.toLowerCase();
+      const grupo = document.getElementById("filtro_grupo").value.toLowerCase();
+      const filas = document.querySelectorAll("#tabla_promedios tbody tr");
+      filas.forEach(fila => {
+        const tdoc = fila.children[1].textContent.toLowerCase();
+        const tgru = fila.children[0].textContent.toLowerCase();
+        fila.style.display = (tdoc.includes(docente) && tgru.includes(grupo)) ? "" : "none";
+      });
+    }
+
+    function limpiar() {
+      document.getElementById("filtro_docente").value = "";
+      document.getElementById("filtro_grupo").value = "";
+      filtrar();
+    }
+  </script>
+
+</body>
+</html>
