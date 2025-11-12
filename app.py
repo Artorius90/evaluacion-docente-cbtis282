@@ -78,6 +78,22 @@ def evaluar():
 
     db.session.add(nueva_eval)
     db.session.commit()
+@app.route("/verificar_evaluacion", methods=["POST"])
+def verificar_evaluacion():
+    data = request.get_json()
+    matricula = data.get("matricula")
+
+    if not matricula:
+        return jsonify({"error": "Falta matrícula"}), 400
+
+    conn = sqlite3.connect("evaluaciones.db")
+    c = conn.cursor()
+
+    c.execute("SELECT COUNT(*) FROM evaluaciones WHERE matricula = ?", (matricula,))
+    count = c.fetchone()[0]
+    conn.close()
+
+    return jsonify({"ya_evaluado": count > 0})
 
     return jsonify({"status": "ok", "mensaje": "Evaluación registrada con éxito"})
 @app.route('/login_admin', methods=['GET', 'POST'])
