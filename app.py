@@ -53,48 +53,33 @@ def obtener_docentes_por_grupo(grupo_id):
 @app.route('/evaluacion')
 def mostrar_formulario():
     return render_template('evaluacion.html')
-@app.route('/evaluar', methods=['POST'])
-def evaluar_docente():
+@app.route("/evaluar", methods=["POST"])
+def evaluar():
     data = request.get_json()
-    estudiante_nombre = data.get('estudiante_nombre')
-    matricula = data.get('matricula')
-    grupo_id = data.get('grupo_id')
-    docente_id = data.get('docente_id')
-    criterios = data.get('criterios')
-    comentario = data.get('comentario', '')
 
-    if not (estudiante_nombre and matricula and grupo_id and docente_id and criterios):
-        return jsonify({"error": "Faltan datos"}), 400
+    matricula = data.get("matricula")
+    docente_id = data.get("docente_id")
+    grupo_id = data.get("grupo_id")
 
-    conn = get_db_connection()
+    # ✅ Verificar si ya evaluó (puedes hacerlo por matrícula + docente o solo matrícula)
+    evaluacion_existente = Evaluacion.query.filter_by(matricula=matricula, docente_id=docente_id).first()
+    if evaluacion_existente:
+        return jsonify({"status": "error", "mensaje": "Ya has evaluado a este docente."}), 400
 
-    # Guardar estudiante si no existe
-    cur = conn.execute("SELECT id FROM estudiantes WHERE matricula = ?", (matricula,))
-    estudiante = cur.fetchone()
-    if estudiante:
-        estudiante_id = estudiante['id']
-    else:
-        cur = conn.execute(
-            "INSERT INTO estudiantes (nombre, matricula, grupo_id) VALUES (?, ?, ?)",
-            (estudiante_nombre, matricula, grupo_id)
-        )
-        estudiante_id = cur.lastrowid
+    # ✅ Crear y guardar nueva evaluación
+    nueva_eval = Evaluacion(
+        estudiante_nombre=data.get("estudiante_nombre"),
+        matricula=matricula,
+        grupo_id=grupo_id,
+        docente_id=docente_id,
+        criterios=data.get("criterios"),
+        comentario=data.get("comentario", "")
+    )
 
-    # Insertar evaluación
-    for criterio, calificacion in criterios.items():
-        conn.execute('''
-            INSERT INTO evaluaciones (estudiante_id, docente_id, grupo_id, criterio, calificacion, comentario, fecha)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        ''', (estudiante_id, docente_id, grupo_id, criterio, calificacion, comentario, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+    db.session.add(nueva_eval)
+    db.session.commit()
 
-    conn.commit()
-    conn.close()
-
-    return jsonify({"mensaje": "Evaluación registrada con éxito"}), 201
-# --- Panel de administrador ---
-import pandas as pd
-from flask import send_file
-
+    return jsonify({"status": "ok", "mensaje": "Evaluación registrada con éxito"})
 @app.route('/login_admin', methods=['GET', 'POST'])
 def login_admin():
     if request.method == 'POST':
@@ -226,6 +211,15 @@ def logout():
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
+
+from flask import jsonify, request
+from models import db, Evaluacion  # ajusta según tus nombres reales
+
+@app.route("/ya_evaluo/<matricula>")
+def ya_evaluo(matricula):
+    """Verifica si un estudiante ya realizó la evaluación."""
+    existe = Evaluacion.query.filter_by(matricula=matricula).first()
+    return jsonify({"ya_evaluo": existe is not None})
 
 
 
