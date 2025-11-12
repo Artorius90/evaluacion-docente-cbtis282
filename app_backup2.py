@@ -1,30 +1,23 @@
-from flask import Flask, request, jsonify, render_template, redirect, url_for, session, flash, send_file
+from flask import Flask, request, jsonify, render_template, redirect, url_for, session, flash
 import sqlite3
-import pandas as pd
 from datetime import datetime
 
 app = Flask(__name__)
-app.secret_key = 'clave_super_segura_cbtis282'
+app.secret_key = 'clave_super_segura_cbtis282'  # 🔐 Clave necesaria para sesiones y flash
 DATABASE = "evaluaciones.db"
 
-# ----------------------------------------------------
-# 🔹 Función para conectar a la base de datos
-# ----------------------------------------------------
+# --- Conexión a la base de datos ---
 def get_db_connection():
     conn = sqlite3.connect(DATABASE)
     conn.row_factory = sqlite3.Row
     return conn
 
-# ----------------------------------------------------
-# 🔹 Página principal
-# ----------------------------------------------------
+# --- Página principal ---
 @app.route('/')
 def index():
     return render_template('index.html')
 
-# ----------------------------------------------------
-# 🔹 Obtener grupo del estudiante por matrícula
-# ----------------------------------------------------
+# --- Obtener grupo del estudiante por matrícula ---
 @app.route('/grupo_estudiante/<matricula>', methods=['GET'])
 def obtener_grupo_estudiante(matricula):
     conn = get_db_connection()
@@ -42,9 +35,7 @@ def obtener_grupo_estudiante(matricula):
     else:
         return jsonify({"error": "No se encontró estudiante"}), 404
 
-# ----------------------------------------------------
-# 🔹 Obtener docentes del grupo
-# ----------------------------------------------------
+# --- Obtener docentes del grupo ---
 @app.route('/docentes/<int:grupo_id>', methods=['GET'])
 def obtener_docentes_por_grupo(grupo_id):
     conn = get_db_connection()
@@ -58,16 +49,10 @@ def obtener_docentes_por_grupo(grupo_id):
     conn.close()
     return jsonify([dict(row) for row in docentes])
 
-# ----------------------------------------------------
-# 🔹 Mostrar formulario de evaluación
-# ----------------------------------------------------
+# --- Guardar evaluación ---
 @app.route('/evaluacion')
 def mostrar_formulario():
     return render_template('evaluacion.html')
-
-# ----------------------------------------------------
-# 🔹 Guardar evaluación (evita duplicados)
-# ----------------------------------------------------
 @app.route("/evaluar", methods=["POST"])
 def evaluar():
     data = request.get_json()
@@ -75,63 +60,51 @@ def evaluar():
     matricula = data.get("matricula")
     docente_id = data.get("docente_id")
     grupo_id = data.get("grupo_id")
-    criterios = data.get("criterios")
-    comentario = data.get("comentario", "")
-    estudiante_nombre = data.get("estudiante_nombre")
 
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    # Verificar si ya evaluó al docente
-    cursor.execute("""
-        SELECT COUNT(*) FROM evaluaciones
-        WHERE matricula = ? AND docente_id = ?
-    """, (matricula, docente_id))
-    existe = cursor.fetchone()[0]
-
-    if existe > 0:
-        conn.close()
+    # ✅ Verificar si ya evaluó (puedes hacerlo por matrícula + docente o solo matrícula)
+    evaluacion_existente = Evaluacion.query.filter_by(matricula=matricula, docente_id=docente_id).first()
+    if evaluacion_existente:
         return jsonify({"status": "error", "mensaje": "Ya has evaluado a este docente."}), 400
 
-    # Guardar la evaluación
-    for criterio, calificacion in criterios.items():
-        cursor.execute("""
-            INSERT INTO evaluaciones (estudiante_nombre, matricula, grupo_id, docente_id, criterio, calificacion, comentario)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (estudiante_nombre, matricula, grupo_id, docente_id, criterio, calificacion, comentario))
+    # ✅ Crear y guardar nueva evaluación
+    nueva_eval = Evaluacion(
+        estudiante_nombre=data.get("estudiante_nombre"),
+        matricula=matricula,
+        grupo_id=grupo_id,
+        docente_id=docente_id,
+        criterios=data.get("criterios"),
+        comentario=data.get("comentario", "")
+    )
 
-    conn.commit()
-    conn.close()
-
-    return jsonify({"status": "success", "mensaje": "Evaluación guardada exitosamente."})
-
-# ----------------------------------------------------
-# 🔹 Verificar si el estudiante ya evaluó
-# ----------------------------------------------------
+    db.session.add(nueva_eval)
+    db.session.commit()
 @app.route("/verificar_evaluacion", methods=["POST"])
 def verificar_evaluacion():
+    from flask import request, jsonify
+    import sqlite3
+
     data = request.get_json()
     matricula = data.get("matricula")
 
     try:
-        conn = get_db_connection()
+        conn = sqlite3.connect("evaluacion_docente.db")
         cursor = conn.cursor()
+
         cursor.execute("SELECT COUNT(*) FROM evaluaciones WHERE matricula = ?", (matricula,))
         ya_evaluado = cursor.fetchone()[0] > 0
+
         conn.close()
 
         return jsonify({"ya_evaluado": ya_evaluado})
+
     except Exception as e:
         print("❌ Error al verificar evaluación:", e)
         return jsonify({"error": "Error interno del servidor"}), 500
-
-# ----------------------------------------------------
-# 🔹 Login del administrador
-# ----------------------------------------------------
 @app.route('/login_admin', methods=['GET', 'POST'])
 def login_admin():
     if request.method == 'POST':
         password = request.form.get('password')
+        # 🔑 Puedes cambiar aquí la contraseña
         if password == 'admin282':
             session['admin'] = True
             flash('Acceso concedido', 'success')
@@ -141,10 +114,6 @@ def login_admin():
             return redirect(url_for('login_admin'))
 
     return render_template('login_admin.html')
-
-# ----------------------------------------------------
-# 🔹 Panel del administrador
-# ----------------------------------------------------
 @app.route('/admin')
 def admin_panel():
     if not session.get('admin'):
@@ -186,13 +155,15 @@ def admin_panel():
 
     return render_template('admin.html', resultados=resultados, comentarios=comentarios, grupos=grupos, docentes=docentes)
 
-# ----------------------------------------------------
-# 🔹 Exportar a Excel
-# ----------------------------------------------------
+# Exportar excel
 @app.route('/exportar_excel')
 def exportar_excel():
+    import pandas as pd
+    from flask import send_file
+
     conn = get_db_connection()
 
+    # Consulta para calcular promedios por docente y grupo
     query = '''
         SELECT 
             g.nombre AS Grupo,
@@ -214,6 +185,7 @@ def exportar_excel():
     '''
     df_promedios = pd.read_sql_query(query, conn)
 
+    # Agregar interpretación textual del promedio
     def interpretar_promedio(valor):
         if valor >= 4.5:
             return "Muy bueno"
@@ -228,6 +200,7 @@ def exportar_excel():
 
     df_promedios["Interpretación"] = df_promedios["Promedio"].apply(interpretar_promedio)
 
+    # Consulta para comentarios
     query_comentarios = '''
         SELECT 
             g.nombre AS Grupo,
@@ -242,6 +215,7 @@ def exportar_excel():
     df_comentarios = pd.read_sql_query(query_comentarios, conn)
     conn.close()
 
+    # Guardar ambos en un solo archivo Excel (dos hojas)
     file_path = "reporte_docentes.xlsx"
     with pd.ExcelWriter(file_path, engine='openpyxl') as writer:
         df_promedios.to_excel(writer, sheet_name='Promedios', index=False)
@@ -249,17 +223,17 @@ def exportar_excel():
 
     return send_file(file_path, as_attachment=True)
 
-# ----------------------------------------------------
-# 🔹 Logout administrador
-# ----------------------------------------------------
 @app.route('/logout')
 def logout():
     session.pop('admin', None)
     flash('Sesión cerrada correctamente.', 'info')
     return redirect(url_for('login_admin'))
 
-# ----------------------------------------------------
-# 🔹 Ejecución
-# ----------------------------------------------------
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
+
+
+
+
+
+

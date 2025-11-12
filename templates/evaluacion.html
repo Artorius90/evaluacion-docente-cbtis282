@@ -195,53 +195,54 @@
         </div>`;
         return html;
     }
-    
-    // ✅ NUEVO: Verificar si el estudiante ya evaluó
-    fetch(`/ya_evaluo/${matricula}`)
+
+    fetch(`/docentes/${grupo_id}`)
         .then(r => r.json())
         .then(data => {
-            if (data.ya_evaluo) {
-                mostrarMensajeYaEvaluo();
-            } else {
-                cargarFormularios();
-            }
-        })
-        .catch(() => {
-            alert("Error al verificar el estado de la evaluación.");
+            const container = document.getElementById("evaluaciones_container");
+            data.forEach(d => container.innerHTML += generarFormularioDocente(d));
         });
 
-    function cargarFormularios() {
-        fetch(`/docentes/${grupo_id}`)
-            .then(r => r.json())
-            .then(data => {
-                const container = document.getElementById("evaluaciones_container");
-                data.forEach(d => container.innerHTML += generarFormularioDocente(d));
-            });
-    }
-    // ✅ Validación antes de enviar
     document.getElementById("btn_enviar").addEventListener("click", () => {
+        // ✅ Verificar si ya evaluó
+        fetch("/verificar_evaluacion", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ matricula })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.ya_evaluado) {
+                alert("⚠️ Ya enviaste tu evaluación. Solo se permite una participación por estudiante.");
+                return;
+            }
+            enviarEvaluacion(); // si no ha evaluado, continúa
+        })
+        .catch(() => alert("❌ Error al verificar el estado de la evaluación."));
+    });
+
+    function enviarEvaluacion() {
         const secciones = document.querySelectorAll(".docente-section");
         const evaluaciones = [];
 
-        // Validar que todas las preguntas estén respondidas
-        for (let sec of secciones) {
-            const selects = sec.querySelectorAll(".criterio");
-            for (let sel of selects) {
-                if (sel.value === "Elige tu respuesta" || sel.value === "") {
-                    alert("Por favor, responde todas las preguntas antes de enviar la evaluación.");
-                    sel.focus();
-                    return; // Detiene el envío
-                }
-            }
-        }
-
-        // Si pasa la validación, se procede a enviar
-        secciones.forEach(sec => {
+        // ✅ Verificar que todas las preguntas estén contestadas
+        for (const sec of secciones) {
             const docente_id = sec.getAttribute("data-docente-id");
             const criteriosSeleccionados = {};
+            let incompleto = false;
+
             sec.querySelectorAll(".criterio").forEach(sel => {
+                if (sel.value === "Elige tu respuesta") {
+                    incompleto = true;
+                }
                 criteriosSeleccionados[sel.getAttribute("data-criterio")] = sel.value;
             });
+
+            if (incompleto) {
+                alert("⚠️ Por favor responde todas las preguntas antes de enviar la evaluación.");
+                return; // Detiene el envío
+            }
+
             const comentario = sec.querySelector(".comentario").value;
 
             evaluaciones.push({
@@ -249,13 +250,14 @@
                 criterios: criteriosSeleccionados,
                 comentario
             });
-        });
+        }
 
+        // ✅ Enviar todas las evaluaciones
         Promise.all(
             evaluaciones.map(ev => {
                 return fetch("/evaluar", {
                     method: "POST",
-                    headers: {"Content-Type": "application/json"},
+                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         estudiante_nombre: nombre,
                         matricula: matricula,
@@ -269,7 +271,7 @@
         ).then(() => {
             mostrarMensajeFinal();
         }).catch(() => alert("❌ Error al enviar las evaluaciones."));
-    });
+    }
 
     function mostrarMensajeFinal() {
         document.body.innerHTML = `
@@ -312,49 +314,7 @@
             </div>
         `;
     }
-
-    // ✅ NUEVO: Mensaje si ya evaluó
-    function mostrarMensajeYaEvaluo() {
-        document.body.innerHTML = `
-            <div style="
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                height: 100vh;
-                background: #f8f9fa;
-                font-family: 'Montserrat', sans-serif;
-                color: #333;
-                text-align: center;
-                padding: 30px;
-            ">
-                <img src="/static/img/LOGO_DGETI.png" alt="Logo DGETI" style="height: 90px; margin-bottom: 15px;">
-                <h1 style="color: #691C32;">Ya has completado tu evaluación docente</h1>
-                <p style="max-width: 600px; font-size: 1.1rem; margin-top: 15px;">
-                    Nuestro sistema registró tu evaluación anterior, por lo que no es necesario volver a enviarla.  
-                    <br><br>
-                    ¡Gracias por participar responsablemente en este proceso!
-                </p>
-                <p style="color: #BC955C; font-family: 'Palace Script MT', cursive; font-size: 2rem; margin-top: 20px;">
-                    Somos Águilas
-                </p>
-                <img src="/static/img/CBTIS_282.png" alt="Logo CBTis 282" style="height: 90px; margin-top: 20px;">
-                <button onclick="window.location.href='/'" style="
-                    margin-top: 30px;
-                    background-color: #691C32;
-                    color: white;
-                    border: none;
-                    padding: 12px 25px;
-                    border-radius: 8px;
-                    font-size: 1rem;
-                    cursor: pointer;
-                    transition: background 0.3s ease;
-                ">Volver al inicio</button>
-            </div>
-        `;
-    }
 </script>
-
 </body>
 </html>
 
