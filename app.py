@@ -212,14 +212,6 @@ def logout():
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
 
-from flask import jsonify, request
-from models import db, Evaluacion  # ajusta según tus nombres reales
-
-@app.route("/ya_evaluo/<matricula>")
-def ya_evaluo(matricula):
-    """Verifica si un estudiante ya realizó la evaluación."""
-    existe = Evaluacion.query.filter_by(matricula=matricula).first()
-    return jsonify({"ya_evaluo": existe is not None})
 
 
 
