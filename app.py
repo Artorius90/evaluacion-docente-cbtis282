@@ -75,54 +75,52 @@ def evaluar():
     matricula = data.get("matricula")
     docente_id = data.get("docente_id")
     grupo_id = data.get("grupo_id")
+    criterios = data.get("criterios")
     comentario = data.get("comentario", "")
+    estudiante_nombre = data.get("estudiante_nombre")
 
-    # 🔒 Lista de palabras prohibidas (puedes agregar o quitar)
-    PALABRAS_PROHIBIDAS = [
-        "pendejo", "idiota", "estúpido", "imbécil", "mierda", "maldito", 
-        "puto", "puta", "cabron", "culero", "chingar", "chingada", 
-        "verga", "coño", "pinche", "tonto", "inútil"
+    # 🚫 Lista de palabras prohibidas
+    palabras_prohibidas = [
+        "pendejo", "culero", "mamona", "mamón", "idiota", "estúpido", "imbécil",
+        "puto", "puta", "mierda", "cabrón", "chingada", "chingar", "verga"
     ]
-
-    def contiene_lenguaje_inapropiado(texto):
-        texto = texto.lower()
-        return any(palabra in texto for palabra in PALABRAS_PROHIBIDAS)
-
-    # ✅ Verificar lenguaje ofensivo
-    if contiene_lenguaje_inapropiado(comentario):
+    comentario_limpio = comentario.lower()
+    if any(p in comentario_limpio for p in palabras_prohibidas):
         return jsonify({
             "status": "error",
             "mensaje": "Tu comentario contiene lenguaje inapropiado. Por favor modifícalo antes de enviarlo."
         }), 400
 
-    # ✅ Verificar si ya evaluó a ese docente
     conn = get_db_connection()
-    query = "SELECT COUNT(*) FROM evaluaciones WHERE matricula = ? AND docente_id = ?"
-    ya_eval = conn.execute(query, (matricula, docente_id)).fetchone()[0]
-    if ya_eval > 0:
-        conn.close()
-        return jsonify({"status": "error", "mensaje": "Ya has evaluado a este docente."}), 400
+    cursor = conn.cursor()
 
-    # ✅ Guardar evaluación
-    conn.execute("""
-        INSERT INTO evaluaciones (estudiante_nombre, matricula, grupo_id, docente_id, comentario, fecha)
-        VALUES (?, ?, ?, ?, ?, ?)
-    """, (
-        data.get("estudiante_nombre"),
-        matricula,
-        grupo_id,
-        docente_id,
-        comentario.strip(),
-        datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    ))
+    # ✅ Verificar si el estudiante ya evaluó (sin importar al docente)
+    cursor.execute("""
+        SELECT COUNT(*) FROM evaluaciones
+        WHERE matricula = ?
+    """, (matricula,))
+    ya_evaluado = cursor.fetchone()[0] > 0
+
+    if ya_evaluado:
+        conn.close()
+        return jsonify({
+            "status": "error",
+            "mensaje": "Ya enviaste tus evaluaciones anteriormente. Solo se permite una participación por estudiante."
+        }), 400
+
+    # ✅ Guardar cada criterio
+    for criterio, calificacion in criterios.items():
+        cursor.execute("""
+            INSERT INTO evaluaciones (estudiante_nombre, matricula, grupo_id, docente_id, criterio, calificacion, comentario)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (estudiante_nombre, matricula, grupo_id, docente_id, criterio, calificacion, comentario))
+
     conn.commit()
     conn.close()
 
-    return jsonify({"status": "ok", "mensaje": "Evaluación enviada correctamente."})
+    return jsonify({"status": "success", "mensaje": "Evaluación guardada exitosamente."})
 
-# ----------------------------------------------------
-# 🔹 Verificar si el estudiante ya evaluó
-# ----------------------------------------------------
+
 @app.route("/verificar_evaluacion", methods=["POST"])
 def verificar_evaluacion():
     data = request.get_json()
