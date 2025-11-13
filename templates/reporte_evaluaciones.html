@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Reporte de Evaluaciones - CBTis 282</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background: #691C32;
+            color: white;
+            padding: 15px 30px;
+            text-align: center;
+        }
+
+        main {
+            padding: 20px;
+            max-width: 900px;
+            margin: 20px auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #BC955C;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        h2 {
+            color: #691C32;
+            text-align: center;
+        }
+
+        .boton-volver {
+            display: block;
+            margin: 20px auto;
+            background-color: #691C32;
+            color: white;
+            padding: 10px 18px;
+            border-radius: 8px;
+            text-decoration: none;
+            text-align: center;
+            width: 200px;
+            transition: background 0.3s;
+        }
+
+        .boton-volver:hover {
+            background-color: #4e1426;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Reporte de Estudiantes que ya Evaluaron</h1>
+    </header>
+    <main>
+        <h2>Centro de Bachillerato Tecnológico Industrial y de Servicios No. 282</h2>
+        <table>
+            <tr>
+                <th>#</th>
+                <th>Nombre del estudiante</th>
+                <th>Matrícula</th>
+                <th>Grupo</th>
+            </tr>
+            {% for i, reg in enumerate(registros, start=1) %}
+            <tr>
+                <td>{{ i }}</td>
+                <td>{{ reg[1] }}</td>
+                <td>{{ reg[0] }}</td>
+                <td>{{ reg[2] }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+
+        {% if registros|length == 0 %}
+            <p style="text-align:center; color: #6F7271; margin-top:20px;">Ningún estudiante ha enviado su evaluación todavía.</p>
+        {% endif %}
+
+        <a href="/admin" class="boton-volver">⬅️ Volver al panel</a>
+    </main>
+</body>
+</html>
