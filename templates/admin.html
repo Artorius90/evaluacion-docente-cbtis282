@@ -328,6 +328,19 @@ function filtrar() {
 document.getElementById("exportarExcel").addEventListener("click", () => {
     window.location.href = "/exportar_excel";
 });
+<a href="{{ url_for('reporte_evaluaciones') }}" 
+   style="
+      display:inline-block;
+      background-color:#BC955C;
+      color:white;
+      padding:10px 20px;
+      border-radius:8px;
+      text-decoration:none;
+      font-weight:bold;
+      margin-top:10px;
+   ">
+   📋 Ver reporte de estudiantes que ya evaluaron
+</a>
 </script>
 
 </body>
