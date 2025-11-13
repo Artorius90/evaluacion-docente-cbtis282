@@ -261,6 +261,28 @@ def exportar_excel():
         df_comentarios.to_excel(writer, sheet_name='Comentarios', index=False)
 
     return send_file(file_path, as_attachment=True)
+# ----------------------------------------------------
+# 🔹 Reporte: Estudiantes que ya realizaron la evaluación
+# ----------------------------------------------------
+@app.route("/reporte_evaluaciones")
+def reporte_evaluaciones():
+    if not session.get('admin'):
+        flash('Debes iniciar sesión para acceder al reporte.', 'error')
+        return redirect(url_for('login_admin'))
+
+    conn = get_db_connection()
+
+    # Obtener los estudiantes que ya evaluaron al menos un docente
+    query = """
+        SELECT DISTINCT e.matricula, e.estudiante_nombre, g.nombre AS grupo
+        FROM evaluaciones e
+        JOIN grupos g ON e.grupo_id = g.id
+        ORDER BY g.nombre, e.estudiante_nombre
+    """
+    datos = conn.execute(query).fetchall()
+    conn.close()
+
+    return render_template("reporte_evaluaciones.html", datos=datos)
 
 # ----------------------------------------------------
 # 🔹 Logout administrador
