@@ -120,7 +120,7 @@
         }
 
         .lema {
-            font-family: 'Rosellinda Alyamore', cursive;
+            font-family: 'Palace Script MT', cursive;
             color: var(--dorado);
             font-size: 1.6rem;
             margin-top: 10px;
@@ -151,6 +151,7 @@
     <p>Dirección General de Educación Tecnológica Industrial y de Servicios</p>
     <p class="lema">Somos Águilas</p>
 </footer>
+
 <script>
     const criterios = [
         "1. La preparación de sus clases fue",
@@ -225,6 +226,9 @@
         const secciones = document.querySelectorAll(".docente-section");
         const evaluaciones = [];
 
+        // 🚫 Lista de palabras prohibidas
+        const palabrasProhibidas = ["tonto", "estúpido", "idiota", "pendejo", "mierda", "imbécil", "burro", "inútil"];
+
         // ✅ Verificar que todas las preguntas estén contestadas
         for (const sec of secciones) {
             const docente_id = sec.getAttribute("data-docente-id");
@@ -240,10 +244,19 @@
 
             if (incompleto) {
                 alert("⚠️ Por favor responde todas las preguntas antes de enviar la evaluación.");
-                return; // Detiene el envío
+                return;
             }
 
-            const comentario = sec.querySelector(".comentario").value;
+            const comentario = sec.querySelector(".comentario").value.trim();
+
+            // 🚨 Filtro de lenguaje inapropiado
+            const comentarioLimpio = comentario.toLowerCase();
+            for (const palabra of palabrasProhibidas) {
+                if (comentarioLimpio.includes(palabra)) {
+                    alert("🚫 Tu comentario contiene lenguaje inapropiado. Por favor, modifícalo antes de enviarlo.");
+                    return; // Detiene el envío
+                }
+            }
 
             evaluaciones.push({
                 docente_id,
@@ -252,7 +265,7 @@
             });
         }
 
-        // ✅ Enviar todas las evaluaciones
+        // ✅ Enviar todas las evaluaciones si pasó todas las validaciones
         Promise.all(
             evaluaciones.map(ev => {
                 return fetch("/evaluar", {
@@ -317,6 +330,8 @@
 </script>
 </body>
 </html>
+
+
 
 
 
