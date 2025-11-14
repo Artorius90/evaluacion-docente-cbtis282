@@ -331,14 +331,32 @@ function calcularPromedioGeneral() {
         contenedor.innerHTML = "";
     }
 }
-
+<form action="/borrar_todo" method="POST" onsubmit="return confirmarBorrado()">
+    <button type="submit"
+        style="
+            background-color:#b82e2e;
+            color:white;
+            padding:10px 20px;
+            border-radius:8px;
+            border:none;
+            font-weight:bold;
+            cursor:pointer;
+            margin-top:15px;
+        ">
+        🗑 Borrar todas las evaluaciones
+    </button>
+</form>
 
 /* 🔹 EXPORTAR A EXCEL */
 document.getElementById("exportarExcel").addEventListener("click", () => {
     window.location.href = "/exportar_excel";
 });
 </script>
-
+<script>
+function confirmarBorrado() {
+    return confirm("⚠ ¿Estás seguro que deseas borrar TODAS las evaluaciones?\nEsta acción no se puede deshacer.");
+}
+</script>
 </body>
 </html>
 
