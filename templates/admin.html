@@ -51,24 +51,13 @@
       border-bottom: 4px solid var(--dorado);
     }
 
-    .admin-header h2 {
-      margin: 0;
-      font-size: 1.3rem;
-      font-weight: 600;
-    }
-
     .logout-btn {
       background-color: var(--dorado);
       color: white;
-      text-decoration: none;
       padding: 8px 16px;
       border-radius: 6px;
+      text-decoration: none;
       font-weight: 600;
-      transition: background 0.3s ease;
-    }
-
-    .logout-btn:hover {
-      background-color: #a57c3f;
     }
 
     main {
@@ -81,8 +70,8 @@
     }
 
     h2 {
-      color: var(--vino);
       text-align: center;
+      color: var(--vino);
       border-bottom: 2px solid var(--dorado);
       padding-bottom: 10px;
     }
@@ -104,64 +93,46 @@
     button {
       background-color: var(--vino);
       color: white;
-      border: none;
       cursor: pointer;
-      transition: background 0.3s ease;
-    }
-
-    button:hover {
-      background-color: #4e1426;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 30px;
-    }
-
-    th, td {
-      border: 1px solid #ccc;
-      padding: 10px;
-      text-align: center;
+      margin-bottom: 25px;
     }
 
     th {
       background-color: var(--vino);
       color: white;
+      padding: 10px;
     }
 
-    tr:nth-child(even) {
-      background-color: #f2f2f2;
+    td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: center;
     }
 
     .comentario {
       background: #fffaf5;
       border-left: 5px solid var(--dorado);
-      margin-bottom: 10px;
       padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 6px;
+    }
+
+    /* Bloque de promedio general */
+    #promedioGeneralDocente {
+      display: none;
+      background: #fffaf5;
+      border-left: 5px solid var(--dorado);
+      padding: 15px;
+      margin-bottom: 20px;
       border-radius: 8px;
+      font-size: 1.1rem;
     }
 
-    footer {
-      text-align: center;
-      padding: 25px;
-      background: #fff;
-      border-top: 4px solid var(--vino);
-      margin-top: 40px;
-    }
-
-    footer p {
-      margin: 0;
-      color: var(--gris);
-      font-size: 0.9rem;
-    }
-
-    .lema {
-      font-family: 'Palace Script MT', cursive;
-      color: var(--dorado);
-      font-size: 1.6rem;
-      margin-top: 10px;
-    }
   </style>
 </head>
 
@@ -180,8 +151,9 @@
 
 <main>
 
+    <!-- FILTROS -->
     <div class="filters">
-        <label for="grupoFiltro">Grupo:</label>
+        <label>Grupo:</label>
         <select id="grupoFiltro">
             <option value="">Todos</option>
             {% for g in grupos %}
@@ -189,7 +161,7 @@
             {% endfor %}
         </select>
 
-        <label for="docenteFiltro">Docente:</label>
+        <label>Docente:</label>
         <select id="docenteFiltro">
             <option value="">Todos</option>
             {% for d in docentes %}
@@ -200,35 +172,30 @@
         <button id="exportarExcel">📊 Exportar a Excel</button>
     </div>
 
-    <!-- 🔹 PROMEDIO GENERAL POR DOCENTE -->
-    <div id="promedioGeneralDocente"
-         style="display:none;
-                background:#fffaf5;
-                border-left:5px solid var(--dorado);
-                padding:15px;
-                margin:15px 0;
-                border-radius:8px;
-                font-size:1.1rem;">
-    </div>
+    <!-- PROMEDIO GENERAL -->
+    <div id="promedioGeneralDocente"></div>
 
+    <!-- TABLA -->
     <h2>Promedios por Docente y Grupo</h2>
-
     <table id="tablaPromedios">
         <tr>
             <th>Grupo</th>
             <th>Docente</th>
             <th>Promedio</th>
         </tr>
+
         {% for fila in resultados %}
         <tr>
-            <td>{{ fila['grupo'] }}</td>
-            <td>{{ fila['docente'] }}</td>
-            <td>{{ fila['promedio'] }}</td>
+            <td>{{ fila["grupo"] }}</td>
+            <td>{{ fila["docente"] }}</td>
+            <td>{{ fila["promedio"] }}</td>
         </tr>
         {% endfor %}
     </table>
 
+    <!-- COMENTARIOS -->
     <h2>Comentarios de los Estudiantes</h2>
+
     <div id="comentariosContainer">
         {% for c in comentarios %}
             <div class="comentario" data-grupo="{{ c['grupo'] }}" data-docente="{{ c['docente'] }}">
@@ -240,42 +207,24 @@
         {% endfor %}
     </div>
 
-    <br>
 
-        <!-- 🔹 BOTÓN DE REPORTE -->
+    <!-- BOTÓN: REPORTE DE QUIÉNES YA EVALUARON -->
     <a href="{{ url_for('reporte_evaluaciones') }}" 
-       style="
-          display:inline-block;
-          background-color:#BC955C;
-          color:white;
-          padding:10px 20px;
-          border-radius:8px;
-          text-decoration:none;
-          font-weight:bold;
-          margin-top:20px;
-       ">
-       📋 Ver reporte de estudiantes que ya evaluaron
+       style="display:inline-block; background:#BC955C; color:white; padding:12px 20px; margin-top:20px;
+              border-radius:8px; text-decoration:none; font-weight:bold;">
+        📋 Ver reporte de estudiantes que ya evaluaron
     </a>
 
     <br><br>
 
-    <!-- 🔹 BOTÓN DE BORRAR TODAS LAS EVALUACIONES -->
+    <!-- BOTÓN: BORRAR TODO -->
     <form action="/borrar_todo" method="POST" onsubmit="return confirmarBorrado()">
         <button type="submit"
-            style="
-                background-color:#b82e2e;
-                color:white;
-                padding:10px 20px;
-                border-radius:8px;
-                border:none;
-                font-weight:bold;
-                cursor:pointer;
-                margin-top:15px;
-            ">
-            🗑 Borrar todas las evaluaciones
+            style="background:#b82e2e; color:white; padding:10px 20px; border:none;
+                   border-radius:8px; font-weight:bold; cursor:pointer;">
+            🗑 Borrar TODAS las evaluaciones
         </button>
     </form>
-    </a>
 
 </main>
 
@@ -290,76 +239,67 @@ function filtrar() {
     const filas = document.querySelectorAll("#tablaPromedios tr");
     filas.forEach((fila, i) => {
         if (i === 0) return;
-        const grupoF = fila.cells[0].textContent;
-        const docenteF = fila.cells[1].textContent;
-
+        const g = fila.cells[0].textContent;
+        const d = fila.cells[1].textContent;
         fila.style.display =
-            (grupo === "" || grupo === grupoF) &&
-            (docente === "" || docente === docenteF)
+            (grupo === "" || grupo === g) &&
+            (docente === "" || docente === d)
             ? "" : "none";
     });
 
     const comentarios = document.querySelectorAll("#comentariosContainer .comentario");
     comentarios.forEach(c => {
-        const grupoC = c.dataset.grupo;
-        const docenteC = c.dataset.docente;
-
+        const g = c.dataset.grupo;
+        const d = c.dataset.docente;
         c.style.display =
-            (grupo === "" || grupo === grupoC) &&
-            (docente === "" || docente === docenteC)
+            (grupo === "" || grupo === g) &&
+            (docente === "" || docente === d)
             ? "" : "none";
     });
 
     calcularPromedioGeneral();
 }
 
-
-/* 🔹 CALCULAR PROMEDIO GENERAL POR DOCENTE */
 function calcularPromedioGeneral() {
     const docente = document.getElementById("docenteFiltro").value;
-    const contenedor = document.getElementById("promedioGeneralDocente");
+    const div = document.getElementById("promedioGeneralDocente");
 
     if (docente === "") {
-        contenedor.style.display = "none";
-        contenedor.innerHTML = "";
+        div.style.display = "none";
+        div.innerHTML = "";
         return;
     }
 
+    let suma = 0, count = 0;
     const filas = document.querySelectorAll("#tablaPromedios tr");
-    let suma = 0;
-    let contador = 0;
 
     filas.forEach((fila, i) => {
         if (i === 0) return;
-        const docenteCelda = fila.cells[1].textContent;
-        const promedio = parseFloat(fila.cells[2].textContent);
-
-        if (docenteCelda === docente) {
-            suma += promedio;
-            contador++;
+        if (fila.style.display === "none") return;
+        if (fila.cells[1].textContent === docente) {
+            suma += parseFloat(fila.cells[2].textContent);
+            count++;
         }
     });
 
-    if (contador > 0) {
-        const promedioGeneral = (suma / contador).toFixed(2);
-        contenedor.style.display = "block";
-        contenedor.innerHTML = `
-            <strong>Promedio general de ${docente}:</strong> ${promedioGeneral}
-        `;
-    } else {
-        contenedor.style.display = "none";
-        contenedor.innerHTML = "";
+    if (count > 0) {
+        div.style.display = "block";
+        div.innerHTML = `<strong>Promedio general de ${docente}:</strong> ${(suma / count).toFixed(2)}`;
     }
 }
 
-/* 🔹 EXPORTAR A EXCEL */
 document.getElementById("exportarExcel").addEventListener("click", () => {
     window.location.href = "/exportar_excel";
 });
+
+function confirmarBorrado() {
+    return confirm("⚠ ¿Estás seguro que deseas borrar TODAS las evaluaciones?\nEsta acción no se puede deshacer.");
+}
 </script>
-</script>
+
 </body>
 </html>
+
 
 
 
