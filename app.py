@@ -283,14 +283,21 @@ def reporte_evaluaciones():
     conn.close()
 
     return render_template("reporte_evaluaciones.html", datos=datos)
-@app.route("/borrar_evaluaciones", methods=["POST"])
-def borrar_evaluaciones():
+
+@app.route("/borrar_todo", methods=["POST"])
+def borrar_todo():
+    # Verificar que el admin esté en sesión
+    if "admin" not in session:
+        return redirect(url_for("login_admin"))
+
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("DELETE FROM evaluaciones")
     conn.commit()
     conn.close()
-    return redirect("/admin")
+
+    flash("Todas las evaluaciones fueron eliminadas.", "info")
+    return redirect(url_for("admin_panel"))
 
 # ----------------------------------------------------
 # 🔹 Logout administrador
@@ -300,8 +307,6 @@ def logout():
     session.pop('admin', None)
     flash('Sesión cerrada correctamente.', 'info')
     return redirect(url_for('login_admin'))
-@app.route("/borrar_todo", methods=["POST"])
-def borrar_todo():
     # Verificar que el admin esté en sesión
     if "admin" not in session:
         return redirect(url_for("login"))
