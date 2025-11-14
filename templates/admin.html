@@ -242,7 +242,7 @@
 
     <br>
 
-    <!-- 🔹 BOTÓN DE REPORTE -->
+        <!-- 🔹 BOTÓN DE REPORTE -->
     <a href="{{ url_for('reporte_evaluaciones') }}" 
        style="
           display:inline-block;
@@ -255,6 +255,26 @@
           margin-top:20px;
        ">
        📋 Ver reporte de estudiantes que ya evaluaron
+    </a>
+
+    <br><br>
+
+    <!-- 🔹 BOTÓN DE BORRAR TODAS LAS EVALUACIONES -->
+    <form action="/borrar_todo" method="POST" onsubmit="return confirmarBorrado()">
+        <button type="submit"
+            style="
+                background-color:#b82e2e;
+                color:white;
+                padding:10px 20px;
+                border-radius:8px;
+                border:none;
+                font-weight:bold;
+                cursor:pointer;
+                margin-top:15px;
+            ">
+            🗑 Borrar todas las evaluaciones
+        </button>
+    </form>
     </a>
 
 </main>
@@ -331,31 +351,12 @@ function calcularPromedioGeneral() {
         contenedor.innerHTML = "";
     }
 }
-<form action="/borrar_todo" method="POST" onsubmit="return confirmarBorrado()">
-    <button type="submit"
-        style="
-            background-color:#b82e2e;
-            color:white;
-            padding:10px 20px;
-            border-radius:8px;
-            border:none;
-            font-weight:bold;
-            cursor:pointer;
-            margin-top:15px;
-        ">
-        🗑 Borrar todas las evaluaciones
-    </button>
-</form>
 
 /* 🔹 EXPORTAR A EXCEL */
 document.getElementById("exportarExcel").addEventListener("click", () => {
     window.location.href = "/exportar_excel";
 });
 </script>
-<script>
-function confirmarBorrado() {
-    return confirm("⚠ ¿Estás seguro que deseas borrar TODAS las evaluaciones?\nEsta acción no se puede deshacer.");
-}
 </script>
 </body>
 </html>

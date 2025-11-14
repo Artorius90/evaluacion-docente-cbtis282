@@ -283,6 +283,14 @@ def reporte_evaluaciones():
     conn.close()
 
     return render_template("reporte_evaluaciones.html", datos=datos)
+@app.route("/borrar_evaluaciones", methods=["POST"])
+def borrar_evaluaciones():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM evaluaciones")
+    conn.commit()
+    conn.close()
+    return redirect("/admin")
 
 # ----------------------------------------------------
 # 🔹 Logout administrador
