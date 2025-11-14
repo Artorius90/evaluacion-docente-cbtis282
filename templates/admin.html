@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <title>Panel Administrativo - CBTis 282</title>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&family=Rosellinda+Alyamore&display=swap" rel="stylesheet">
+
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+
   <style>
     :root {
       --vino: #691C32;
@@ -39,6 +41,36 @@
       color: var(--vino);
     }
 
+    .admin-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--vino);
+      color: white;
+      padding: 15px 40px;
+      border-bottom: 4px solid var(--dorado);
+    }
+
+    .admin-header h2 {
+      margin: 0;
+      font-size: 1.3rem;
+      font-weight: 600;
+    }
+
+    .logout-btn {
+      background-color: var(--dorado);
+      color: white;
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-weight: 600;
+      transition: background 0.3s ease;
+    }
+
+    .logout-btn:hover {
+      background-color: #a57c3f;
+    }
+
     main {
       max-width: 1100px;
       margin: 40px auto;
@@ -55,7 +87,7 @@
       padding-bottom: 10px;
     }
 
-    .filtros {
+    .filters {
       display: flex;
       justify-content: center;
       gap: 15px;
@@ -132,119 +164,24 @@
     }
   </style>
 </head>
+
 <body>
 
-  <header>
-        <img src="{{ url_for('static', filename='img/LOGO_DGETI.png') }}" alt="Logo DGETI">
+<header>
+    <img src="{{ url_for('static', filename='img/LOGO_DGETI.png') }}" alt="Logo DGETI">
     <h1>Centro de Bachillerato Tecnológico Industrial y de Servicios No. 282</h1>
     <img src="{{ url_for('static', filename='img/CBTIS_282.png') }}" alt="Logo CBTis 282">
-  </header>
+</header>
+
 <div class="admin-header">
     <h2>Panel de Administración</h2>
     <a href="{{ url_for('logout') }}" class="logout-btn">Cerrar sesión</a>
 </div>
-  <main>
-</head>
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Panel de Administración - CBTis 282</title>
 
-    <!-- Tipografías institucionales -->
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
-
-    <style>
-        :root {
-            --vino: #691C32;
-            --dorado: #BC955C;
-            --gris: #6F7271;
-        }
-
-        body {
-            font-family: 'Montserrat', sans-serif;
-            background: #f8f9fa;
-            margin: 0;
-            padding: 0;
-        }
-
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: white;
-            padding: 15px 40px;
-            border-bottom: 6px solid var(--vino);
-        }
-
-        header img {
-            height: 80px;
-        }
-
-        header h1 {
-            font-size: 1.4rem;
-            text-align: center;
-            color: var(--vino);
-            flex: 1;
-        }
-
-        /* 🔹 Aquí van los nuevos estilos del panel y botón de cerrar sesión */
-        .admin-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: var(--vino);
-            color: white;
-            padding: 15px 40px;
-            border-bottom: 4px solid var(--dorado);
-        }
-
-        .admin-header h2 {
-            margin: 0;
-            font-size: 1.3rem;
-            font-weight: 600;
-        }
-
-        .logout-btn {
-            background-color: var(--dorado);
-            color: white;
-            text-decoration: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            font-weight: 600;
-            transition: background 0.3s ease;
-        }
-
-        .logout-btn:hover {
-            background-color: #a57c3f;
-        }
-    </style>
-</head>
-
-<body>
-    <header>
-        <img src="{{ url_for('static', filename='img/LOGO_DGETI.png') }}" alt="Logo DGETI">
-        <h1>Centro de Bachillerato Tecnológico Industrial y de Servicios No. 282</h1>
-        <img src="{{ url_for('static', filename='img/CBTIS_282.png') }}" alt="Logo CBTis 282">
-    </header>
-
-    <div class="admin-header">
-        <h2>Panel de Administración</h2>
-        <a href="{{ url_for('logout') }}" class="logout-btn">Cerrar sesión</a>
-    </div>
-
-    <main>
-        <!-- Aquí sigue el contenido del panel -->
-    </main>
-</body>
-</html>
-<body>
-
-<div class="container">
-    <h1>Panel de Administración</h1>
+<main>
 
     <div class="filters">
-        <label for="grupoFiltro">Filtrar por grupo:</label>
+        <label for="grupoFiltro">Grupo:</label>
         <select id="grupoFiltro">
             <option value="">Todos</option>
             {% for g in grupos %}
@@ -252,7 +189,7 @@
             {% endfor %}
         </select>
 
-        <label for="docenteFiltro">Filtrar por docente:</label>
+        <label for="docenteFiltro">Docente:</label>
         <select id="docenteFiltro">
             <option value="">Todos</option>
             {% for d in docentes %}
@@ -260,10 +197,22 @@
             {% endfor %}
         </select>
 
-        <button id="exportarExcel" class="export">📊 Exportar a Excel</button>
+        <button id="exportarExcel">📊 Exportar a Excel</button>
+    </div>
+
+    <!-- 🔹 PROMEDIO GENERAL POR DOCENTE -->
+    <div id="promedioGeneralDocente"
+         style="display:none;
+                background:#fffaf5;
+                border-left:5px solid var(--dorado);
+                padding:15px;
+                margin:15px 0;
+                border-radius:8px;
+                font-size:1.1rem;">
     </div>
 
     <h2>Promedios por Docente y Grupo</h2>
+
     <table id="tablaPromedios">
         <tr>
             <th>Grupo</th>
@@ -290,7 +239,25 @@
             <p>No hay comentarios registrados.</p>
         {% endfor %}
     </div>
-</div>
+
+    <br>
+
+    <!-- 🔹 BOTÓN DE REPORTE -->
+    <a href="{{ url_for('reporte_evaluaciones') }}" 
+       style="
+          display:inline-block;
+          background-color:#BC955C;
+          color:white;
+          padding:10px 20px;
+          border-radius:8px;
+          text-decoration:none;
+          font-weight:bold;
+          margin-top:20px;
+       ">
+       📋 Ver reporte de estudiantes que ya evaluaron
+    </a>
+
+</main>
 
 <script>
 document.getElementById("grupoFiltro").addEventListener("change", filtrar);
@@ -300,51 +267,81 @@ function filtrar() {
     const grupo = document.getElementById("grupoFiltro").value;
     const docente = document.getElementById("docenteFiltro").value;
 
-    // Filtrar filas de la tabla
     const filas = document.querySelectorAll("#tablaPromedios tr");
     filas.forEach((fila, i) => {
-        if (i === 0) return; // saltar encabezado
-        const grupoCelda = fila.cells[0].textContent;
-        const docenteCelda = fila.cells[1].textContent;
-        fila.style.display = 
-            (grupo === "" || grupo === grupoCelda) &&
-            (docente === "" || docente === docenteCelda)
+        if (i === 0) return;
+        const grupoF = fila.cells[0].textContent;
+        const docenteF = fila.cells[1].textContent;
+
+        fila.style.display =
+            (grupo === "" || grupo === grupoF) &&
+            (docente === "" || docente === docenteF)
             ? "" : "none";
     });
 
-    // Filtrar comentarios
     const comentarios = document.querySelectorAll("#comentariosContainer .comentario");
     comentarios.forEach(c => {
         const grupoC = c.dataset.grupo;
         const docenteC = c.dataset.docente;
-        c.style.display = 
+
+        c.style.display =
             (grupo === "" || grupo === grupoC) &&
             (docente === "" || docente === docenteC)
             ? "" : "none";
     });
+
+    calcularPromedioGeneral();
 }
 
-// Exportar a Excel (simple descarga CSV)
+
+/* 🔹 CALCULAR PROMEDIO GENERAL POR DOCENTE */
+function calcularPromedioGeneral() {
+    const docente = document.getElementById("docenteFiltro").value;
+    const contenedor = document.getElementById("promedioGeneralDocente");
+
+    if (docente === "") {
+        contenedor.style.display = "none";
+        contenedor.innerHTML = "";
+        return;
+    }
+
+    const filas = document.querySelectorAll("#tablaPromedios tr");
+    let suma = 0;
+    let contador = 0;
+
+    filas.forEach((fila, i) => {
+        if (i === 0) return;
+        const docenteCelda = fila.cells[1].textContent;
+        const promedio = parseFloat(fila.cells[2].textContent);
+
+        if (docenteCelda === docente) {
+            suma += promedio;
+            contador++;
+        }
+    });
+
+    if (contador > 0) {
+        const promedioGeneral = (suma / contador).toFixed(2);
+        contenedor.style.display = "block";
+        contenedor.innerHTML = `
+            <strong>Promedio general de ${docente}:</strong> ${promedioGeneral}
+        `;
+    } else {
+        contenedor.style.display = "none";
+        contenedor.innerHTML = "";
+    }
+}
+
+
+/* 🔹 EXPORTAR A EXCEL */
 document.getElementById("exportarExcel").addEventListener("click", () => {
     window.location.href = "/exportar_excel";
 });
-<a href="{{ url_for('reporte_evaluaciones') }}" 
-   style="
-      display:inline-block;
-      background-color:#BC955C;
-      color:white;
-      padding:10px 20px;
-      border-radius:8px;
-      text-decoration:none;
-      font-weight:bold;
-      margin-top:10px;
-   ">
-   📋 Ver reporte de estudiantes que ya evaluaron
-</a>
 </script>
 
 </body>
 </html>
+
 
 
 
