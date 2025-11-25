@@ -3,13 +3,14 @@ import os
 
 DB = 'evaluaciones.db'
 
-# eliminar BD vieja si existe
+# eliminar BD vieja si existe (opcional)
 if os.path.exists(DB):
     os.remove(DB)
 
 conn = sqlite3.connect(DB)
 cur = conn.cursor()
 
+# tablas
 cur.executescript("""
 CREATE TABLE grupos (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -38,21 +39,22 @@ CREATE TABLE estudiantes (
     FOREIGN KEY (grupo_id) REFERENCES grupos(id)
 );
 
--- ESTA ES LA TABLA CORRECTA PARA TU APLICACIÓN
+-- criterios se guardan como texto (JSON)
 CREATE TABLE evaluaciones (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    estudiante_nombre TEXT,
-    matricula TEXT,
-    grupo_id INTEGER,
+    estudiante_id INTEGER,
     docente_id INTEGER,
-    criterio TEXT,
-    calificacion TEXT,
-    comentario TEXT,
-    fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    grupo_id INTEGER,
+    criterios TEXT NOT NULL,
+    comentarios TEXT,
+    fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (estudiante_id) REFERENCES estudiantes(id),
+    FOREIGN KEY (docente_id) REFERENCES docentes(id),
+    FOREIGN KEY (grupo_id) REFERENCES grupos(id)
 );
 """)
 
-# Datos de prueba opcionales
+# datos de ejemplo
 cur.executemany("INSERT INTO grupos (nombre) VALUES (?)", [
     ('Grupo A',),
     ('Grupo B',)
@@ -69,6 +71,7 @@ cur.executemany("INSERT INTO materias (nombre, docente_id, grupo_id) VALUES (?, 
     ('Física I', 1, 2)
 ])
 
+# estudiantes ejemplo (matrícula opcional)
 cur.executemany("INSERT INTO estudiantes (nombre, matricula, grupo_id) VALUES (?, ?, ?)", [
     ('Ana Gómez', 'A001', 1),
     ('Luis Morales', 'A002', 1),
@@ -79,4 +82,5 @@ cur.executemany("INSERT INTO estudiantes (nombre, matricula, grupo_id) VALUES (?
 conn.commit()
 conn.close()
 
-print("✅ Base de datos creada correctamente con la estructura usada por la app.")
+print("✅ Base de datos creada y lista con datos de prueba.")
+
