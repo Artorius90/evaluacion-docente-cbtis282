@@ -3,14 +3,14 @@ import os
 
 DB = 'evaluaciones.db'
 
-# Eliminar BD vieja si existe (opcional)
+# eliminar BD vieja si existe (opcional)
 if os.path.exists(DB):
     os.remove(DB)
 
 conn = sqlite3.connect(DB)
 cur = conn.cursor()
 
-# Crear tablas
+# tablas
 cur.executescript("""
 CREATE TABLE grupos (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -54,7 +54,7 @@ CREATE TABLE evaluaciones (
 );
 """)
 
-# Datos de ejemplo
+# datos de ejemplo
 cur.executemany("INSERT INTO grupos (nombre) VALUES (?)", [
     ('Grupo A',),
     ('Grupo B',)
@@ -71,7 +71,7 @@ cur.executemany("INSERT INTO materias (nombre, docente_id, grupo_id) VALUES (?, 
     ('Física I', 1, 2)
 ])
 
-# Estudiantes ejemplo (matrícula opcional)
+# estudiantes ejemplo (matrícula opcional)
 cur.executemany("INSERT INTO estudiantes (nombre, matricula, grupo_id) VALUES (?, ?, ?)", [
     ('Ana Gómez', 'A001', 1),
     ('Luis Morales', 'A002', 1),
