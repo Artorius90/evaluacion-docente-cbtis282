@@ -123,6 +123,31 @@ def verificar_evaluacion():
     except Exception as e:
         print("❌ Error al verificar evaluación:", e)
         return jsonify({"error": "Error interno del servidor"}), 500
+# ----------------------------------------------------
+# 🔹 Reporte: Estudiantes que ya realizaron la evaluación
+# ----------------------------------------------------
+@app.route("/reporte_evaluaciones")
+def reporte_evaluaciones():
+    if not session.get('admin'):
+        flash('Debes iniciar sesión para acceder al reporte.', 'error')
+        return redirect(url_for('login_admin'))
+
+    conn = get_db_connection()
+
+    query = """
+    SELECT DISTINCT 
+        e.matricula,
+        e.estudiante_nombre,
+        g.nombre AS grupo
+    FROM evaluaciones e
+    JOIN grupos g ON e.grupo_id = g.id
+    ORDER BY g.nombre, e.estudiante_nombre
+    """
+    datos = conn.execute(query).fetchall()
+    conn.close()
+
+    return render_template("reporte_evaluaciones.html", datos=datos)
+
 
 # ----------------------------------------------------
 # 🔹 Login del administrador
@@ -247,6 +272,19 @@ def exportar_excel():
         df_comentarios.to_excel(writer, sheet_name='Comentarios', index=False)
 
     return send_file(file_path, as_attachment=True)
+@app.route('/borrar_todo', methods=['POST'])
+def borrar_todo():
+    if not session.get('admin'):
+        flash('Debes iniciar sesión.', 'error')
+        return redirect(url_for('login_admin'))
+
+    conn = get_db_connection()
+    conn.execute("DELETE FROM evaluaciones")
+    conn.commit()
+    conn.close()
+
+    flash("Todas las evaluaciones fueron eliminadas.", "success")
+    return redirect(url_for('admin_panel'))
 
 # ----------------------------------------------------
 # 🔹 Logout administrador

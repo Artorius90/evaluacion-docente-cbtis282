@@ -26,7 +26,7 @@ hojas_tablas = {
 
 for hoja, tabla in hojas_tablas.items():
     try:
-        df = pd.read_excel(EXCEL_FILE, sheet_name=hoja)
+        df = pd.read_excel(EXCEL_FILE, sheet_name=hoja, dtype=str)
         if not df.empty:
             df = df.dropna(how="all")
             df.to_sql(tabla, conn, if_exists="replace", index=False)

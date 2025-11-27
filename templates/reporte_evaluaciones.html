@@ -84,15 +84,14 @@
                 <th>Nombre del estudiante</th>
                 <th>Matrícula</th>
                 <th>Grupo</th>
-            </tr>
-            {% for i, reg in enumerate(registros, start=1) %}
-            <tr>
-                <td>{{ i }}</td>
-                <td>{{ reg[1] }}</td>
-                <td>{{ reg[0] }}</td>
-                <td>{{ reg[2] }}</td>
-            </tr>
-            {% endfor %}
+            {% for reg in datos %}
+<tr>
+    <td>{{ loop.index }}</td>
+    <td>{{ reg["matricula"] }}</td>
+    <td>{{ reg["estudiante_nombre"] }}</td>
+    <td>{{ reg["grupo"] }}</td>
+</tr>
+{% endfor %}
         </table>
 
         {% if registros|length == 0 %}
