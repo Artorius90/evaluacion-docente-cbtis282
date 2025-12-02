@@ -29,7 +29,7 @@ for hoja, tabla in hojas_tablas.items():
         df = pd.read_excel(EXCEL_FILE, sheet_name=hoja, dtype=str)
         if not df.empty:
             df = df.dropna(how="all")
-            df.to_sql(tabla, conn, if_exists="replace", index=False)
+            df.to_sql(tabla, conn, if_exists="append", index=False)
             print(f"✅ Hoja '{hoja}' importada correctamente en tabla '{tabla}'.")
         else:
             print(f"⚠️ Hoja '{hoja}' está vacía, se omitió.")

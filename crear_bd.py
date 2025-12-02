@@ -3,9 +3,6 @@ import os
 
 DB = "evaluaciones.db"
 
-if os.path.exists(DB):
-    os.remove(DB)
-
 conn = sqlite3.connect(DB)
 cur = conn.cursor()
 
