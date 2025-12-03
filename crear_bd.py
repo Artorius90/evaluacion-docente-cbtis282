@@ -1,5 +1,4 @@
 import sqlite3
-import os
 
 DB = "evaluaciones.db"
 
@@ -7,17 +6,17 @@ conn = sqlite3.connect(DB)
 cur = conn.cursor()
 
 cur.executescript("""
-CREATE TABLE grupos (
+CREATE TABLE IF NOT EXISTS grupos (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     nombre TEXT NOT NULL
 );
 
-CREATE TABLE docentes (
+CREATE TABLE IF NOT EXISTS docentes (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     nombre TEXT NOT NULL
 );
 
-CREATE TABLE materias (
+CREATE TABLE IF NOT EXISTS materias (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     nombre TEXT NOT NULL,
     docente_id INTEGER,
@@ -26,7 +25,7 @@ CREATE TABLE materias (
     FOREIGN KEY (grupo_id) REFERENCES grupos(id)
 );
 
-CREATE TABLE estudiantes (
+CREATE TABLE IF NOT EXISTS estudiantes (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     nombre TEXT NOT NULL,
     matricula TEXT,
@@ -34,7 +33,7 @@ CREATE TABLE estudiantes (
     FOREIGN KEY (grupo_id) REFERENCES grupos(id)
 );
 
-CREATE TABLE evaluaciones (
+CREATE TABLE IF NOT EXISTS evaluaciones (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     estudiante_nombre TEXT,
     matricula TEXT,
@@ -49,4 +48,5 @@ CREATE TABLE evaluaciones (
 conn.commit()
 conn.close()
 
-print("✅ Base de datos creada con estructura original.")
+print("✅ Base de datos revisada (sin borrar datos).")
+
